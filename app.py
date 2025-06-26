@@ -22,7 +22,7 @@ try:
 except ImportError:
     OLLAMA_EMBEDDINGS_AVAILABLE = False
 
-# ✅ SentenceTransformer wrapper
+# SentenceTransformer wrapper
 class DirectSentenceTransformerEmbeddings(Embeddings):
     def __init__(self, model_name="all-MiniLM-L6-v2"):
         from sentence_transformers import SentenceTransformer
@@ -34,13 +34,13 @@ class DirectSentenceTransformerEmbeddings(Embeddings):
     def embed_query(self, query):
         return self.model.encode([query], convert_to_numpy=True)[0].tolist()
 
-# ✅ Clean PDF text
+# Clean PDF text
 def clean_text(text):
     text = re.sub(r'\s+', ' ', text)
     text = re.sub(r'[^\w\s\.\,\;\:\!\?\"\'\(\)\-]', ' ', text)
     return text.strip()
 
-# ✅ Extract PDF text
+# Extract PDF text
 def get_pdf_text(pdf_docs):
     text = ""
     for pdf in pdf_docs:
@@ -55,14 +55,14 @@ def get_pdf_text(pdf_docs):
 
             if pdf_text.strip():
                 text += f"\n=== Document: {pdf.name} ===\n{pdf_text}\n"
-                st.info(f"✅ Extracted from {pdf.name}: {len(pdf_text)} characters")
+                st.info(f"Extracted from {pdf.name}: {len(pdf_text)} characters")
             else:
-                st.warning(f"⚠️ No text extracted from {pdf.name}")
+                st.warning(f"No text extracted from {pdf.name}")
         except Exception as e:
             st.error(f"Error reading {pdf.name}: {str(e)}")
     return text
 
-# ✅ Chunk the text
+# Chunk the text
 def get_text_chunks(text):
     splitter = RecursiveCharacterTextSplitter(
         separators=["\n\n", "\n", ". ", " ", ""],
@@ -73,24 +73,24 @@ def get_text_chunks(text):
     )
     return [chunk for chunk in splitter.split_text(text) if len(chunk.strip()) > 50]
 
-# ✅ Create vectorstore
+# Create vectorstore
 def get_vectorstore(text_chunks):
     try:
-        st.write("🔍 Creating embeddings...")
+        st.write("Creating embeddings...")
         try:
             embeddings = DirectSentenceTransformerEmbeddings()
-            st.write("✅ Using SentenceTransformers")
+            st.write("Using SentenceTransformers")
         except:
             embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2", model_kwargs={'device': 'cpu'})
-            st.write("✅ Using HuggingFace embeddings")
+            st.write("Using HuggingFace embeddings")
         vectorstore = FAISS.from_texts(texts=text_chunks, embedding=embeddings)
-        st.success("✅ Vector store created")
+        st.success("Vector store created")
         return vectorstore
     except Exception as e:
-        st.error(f"❌ Error creating vector store: {str(e)}")
+        st.error(f"Error creating vector store: {str(e)}")
         return None
 
-# ✅ Build Conversation chain
+# Build Conversation chain
 def get_conversation_chain(vectorstore):
     try:
         model = "llama3:8b"
@@ -128,11 +128,11 @@ Answer:""",
         st.error(f"Error loading LLM: {str(e)}")
         return None
 
-# ✅ Streamlit UI
+# Streamlit UI
 def main():
     load_dotenv()
     st.set_page_config(page_title="PDF Chatbot", page_icon="📄")
-    st.title("📚 Multi-PDF Chatbot")
+    st.title("Multi-PDF Chatbot")
 
     if "conversation" not in st.session_state:
         st.session_state.conversation = None
@@ -156,16 +156,16 @@ def main():
             if chain is None:
                 return
             st.session_state.conversation = chain
-            st.success("✅ Ready to chat!")
+            st.success("Ready to chat!")
 
     if st.session_state.conversation:
         query = st.text_input("Ask something from the PDF(s):")
         if query:
             with st.spinner("Answering..."):
                 response = st.session_state.conversation({"question": query})
-                st.markdown("### 🧠 Answer")
+                st.markdown("### Answer")
                 st.write(response["answer"])
-                with st.expander("🔍 Source Chunks"):
+                with st.expander("Source Chunks"):
                     for doc in response["source_documents"]:
                         st.markdown(doc.page_content[:500] + "...")
 
