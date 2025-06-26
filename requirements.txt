@@ -1,0 +1,8 @@
+streamlit
+langchain
+sentence-transformers
+scikit-learn
+torch
+faiss-cpu
+pypdf
+python-dotenv
