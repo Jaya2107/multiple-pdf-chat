@@ -3,7 +3,9 @@ python-dotenv
 pypdf
 faiss-cpu
 sentence-transformers
-langchain>=0.3,<1.0
-langchain-community>=0.3,<0.4
-langchain-text-splitters>=0.3,<1.0
-langchain-groq>=0.3,<1.0
+langchain==0.3.7
+langchain-core==0.3.63
+langchain-community==0.3.7
+langchain-text-splitters==0.3.2
+langchain-groq==0.2.2
+langgraph==0.2.45

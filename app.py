@@ -11,6 +11,9 @@ from langchain.chains import ConversationalRetrievalChain
 from langchain.prompts import PromptTemplate
 from langchain.embeddings.base import Embeddings
 
+# NEW: optional LangGraph self-correcting RAG (separate file, doesn't touch anything below)
+from langgraph_rag import get_langgraph_chain
+
 # Groq retires models regularly. If this one stops working, set GROQ_MODEL
 # in Streamlit secrets (no code change needed). Check console.groq.com/docs/models
 DEFAULT_GROQ_MODEL = "openai/gpt-oss-20b"
@@ -161,8 +164,18 @@ def main():
 
     st.session_state.setdefault("conversation", None)
     st.session_state.setdefault("messages", [])
+    st.session_state.setdefault("mode", "standard")  # NEW: tracks which RAG mode is active
 
     pdf_docs = st.file_uploader("Upload PDF(s)", accept_multiple_files=True, type=["pdf"])
+
+    # NEW: let the user pick which RAG pipeline to use
+    rag_mode = st.radio(
+        "RAG Mode:",
+        ["Standard RAG", "Self-Correcting RAG (LangGraph)"],
+        help="Standard RAG = single-pass retrieval and answer generation. "
+             "Self-Correcting RAG = grades retrieved context and automatically "
+             "widens the search if the initial results are insufficient.",
+    )
 
     if st.button("Process PDFs"):
         if not pdf_docs:
@@ -177,12 +190,23 @@ def main():
             vectorstore = get_vectorstore(chunks)
             if vectorstore is None:
                 return
-            chain, llm_label = get_conversation_chain(vectorstore)
-            if chain is None:
-                return
-            st.session_state.conversation = chain
+
+            if rag_mode == "Self-Correcting RAG (LangGraph)":
+                # NEW branch: build the LangGraph graph using the same llm/vectorstore
+                llm, llm_label = get_llm()
+                graph = get_langgraph_chain(vectorstore, llm)
+                st.session_state.conversation = graph
+                st.session_state.mode = "langgraph"
+            else:
+                # ORIGINAL behaviour, untouched
+                chain, llm_label = get_conversation_chain(vectorstore)
+                if chain is None:
+                    return
+                st.session_state.conversation = chain
+                st.session_state.mode = "standard"
+
             st.session_state.messages = []  # fresh chat for new documents
-            st.success(f"Ready to chat! LLM: {llm_label}")
+            st.success(f"Ready to chat! LLM: {llm_label} | Mode: {rag_mode}")
 
     if st.session_state.conversation:
         # Show past messages (chat_input avoids re-running the LLM on every rerun)
@@ -203,7 +227,18 @@ def main():
             with st.chat_message("assistant"):
                 with st.spinner("Answering..."):
                     try:
-                        response = st.session_state.conversation.invoke({"question": query})
+                        if st.session_state.mode == "langgraph":
+                            # NEW path: invoke the compiled LangGraph graph
+                            response = st.session_state.conversation.invoke(
+                                {"question": query, "retry_count": 0, "documents": [], "answer": ""}
+                            )
+                            answer = response["answer"]
+                            sources = [d.page_content[:500] + "..." for d in response["documents"]]
+                        else:
+                            # ORIGINAL path, untouched
+                            response = st.session_state.conversation.invoke({"question": query})
+                            answer = response["answer"]
+                            sources = [d.page_content[:500] + "..." for d in response["source_documents"]]
                     except Exception as e:
                         st.error(
                             "Could not get an answer. This can be an API rate limit, "
@@ -212,8 +247,6 @@ def main():
                         )
                         return
 
-                answer = response["answer"]
-                sources = [d.page_content[:500] + "..." for d in response["source_documents"]]
                 st.write(answer)
                 with st.expander("Source Chunks"):
                     for s in sources:
