@@ -1,4 +1,3 @@
-
 """Playwright UI tests for the Multi-PDF Chatbot (Streamlit app)."""
 import os
 
@@ -18,7 +17,18 @@ def upload_and_process(page: Page, pdf_path):
     page.locator('input[type="file"]').set_input_files(str(pdf_path))
     expect(page.get_by_text("sample.pdf").first).to_be_visible(timeout=SLOW)
     page.get_by_role("button", name="Process PDFs").click()
-    expect(page.get_by_text("Ready to chat!")).to_be_visible(timeout=VERY_SLOW)
+
+    # Poll the page so a failure shows what the app actually displayed
+    # (success OR error box) instead of an empty 180s timeout.
+    for i in range(36):  # 36 x 5s = 180s
+        body = page.inner_text("body")
+        if "Ready to chat!" in body:
+            return
+        if i % 3 == 0:
+            print(f"[{i * 5}s] PAGE TEXT:\n{body}\n")
+        page.wait_for_timeout(5000)
+    page.screenshot(path="test-failure.png")
+    raise AssertionError("Ready to chat! never appeared (see PAGE TEXT above)")
 
 
 # ---------- Smoke tests (no LLM needed) ----------

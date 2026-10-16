@@ -5,6 +5,10 @@ Selenium is used here as an independent cross-check.
 
 Run:            pytest tests/test_selenium_ui.py
 See browser:    $env:SHOW_BROWSER = "1"   (PowerShell) then run pytest
+
+Driver handling:
+- Local (Windows): if <project root>/drivers/chromedriver.exe exists, it is used.
+- CI (Linux): the file does not exist, so Selenium Manager finds the driver itself.
 """
 import os
 from pathlib import Path
@@ -19,7 +23,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 WAIT = 30  # seconds
 
-# chromedriver.exe is placed manually in <project root>/drivers/
+# Optional local driver: <project root>/drivers/chromedriver.exe
 DRIVER_PATH = Path(__file__).resolve().parent.parent / "drivers" / "chromedriver.exe"
 
 
@@ -29,8 +33,13 @@ def driver():
     if os.getenv("SHOW_BROWSER") != "1":
         opts.add_argument("--headless=new")
     opts.add_argument("--window-size=1280,900")
-    service = Service(executable_path=str(DRIVER_PATH))
-    d = webdriver.Chrome(service=service, options=opts)
+    opts.add_argument("--no-sandbox")             # needed on CI Linux runners
+    opts.add_argument("--disable-dev-shm-usage")  # avoids /dev/shm crashes on CI
+
+    if DRIVER_PATH.exists():
+        d = webdriver.Chrome(service=Service(executable_path=str(DRIVER_PATH)), options=opts)
+    else:
+        d = webdriver.Chrome(options=opts)  # CI/Linux: Selenium Manager finds the driver
     yield d
     d.quit()
 
