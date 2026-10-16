@@ -1,0 +1,6 @@
+
+pytest
+pytest-playwright
+reportlab
+langgraph
+selenium
