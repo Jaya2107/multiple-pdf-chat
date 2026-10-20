@@ -1,0 +1,20 @@
+
+[
+  {"id": "h01", "question": "For how many years did King Tobren rule?", "expected": ["23"], "should_refuse": false},
+  {"id": "h02", "question": "What is the capital of Velmora?", "expected": ["Dunhart"], "should_refuse": false},
+  {"id": "h03", "question": "In which year was Velmora founded?", "expected": ["1901"], "should_refuse": false},
+  {"id": "h04", "question": "Which waterway runs through the seat of government of Zorland?", "expected": ["Elmar"], "should_refuse": false},
+  {"id": "h05", "question": "Which is taller, Mount Vellor or Mount Dremis?", "expected": ["Vellor"], "should_refuse": false},
+  {"id": "h06", "question": "What is the largest city in Zorland?", "expected": ["Port Harlow"], "should_refuse": false},
+  {"id": "h07", "question": "What percentage of Zorland's exports is silk?", "expected": ["38"], "should_refuse": false},
+  {"id": "h08", "question": "Which currency did Zorland use before the Zor?", "expected": ["Marl"], "should_refuse": false},
+  {"id": "h09", "question": "Where was the 1962 treaty between the two countries signed?", "expected": ["Dunhart"], "should_refuse": false},
+  {"id": "h10", "question": "How many kilometres longer is the Sarn river than the Elmar river?", "expected": ["118"], "should_refuse": false},
+  {"id": "h11", "question": "How many people live in the capital of Zorland?", "expected": ["610"], "should_refuse": false},
+  {"id": "h12", "question": "What is the currency of Velmora?", "expected": ["Velm"], "should_refuse": false},
+  {"id": "h13", "question": "On what date is the Harvest Festival held?", "expected": ["2 October"], "should_refuse": false},
+  {"id": "h14", "question": "Who became ruler of Zorland after King Tobren?", "expected": [], "should_refuse": true},
+  {"id": "h15", "question": "What is the GDP of Zorland?", "expected": [], "should_refuse": true},
+  {"id": "h16", "question": "What is the total area of Zorland in square kilometres?", "expected": [], "should_refuse": true},
+  {"id": "h17", "question": "Who is the current president of Velmora?", "expected": [], "should_refuse": true}
+]

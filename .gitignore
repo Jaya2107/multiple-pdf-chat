@@ -5,3 +5,7 @@ __pycache__/
 venv/
 .venv/
 drivers/
+
+mlflow.db
+mlruns/
+evals/data/
